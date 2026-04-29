@@ -3,6 +3,7 @@ import ScrollReveal from '../components/ui/ScrollReveal'
 import { services, contact } from '../data/content'
 import { MapPin, Phone, Heart, Scale, Handshake, Briefcase, TrendingUp, Shield, Building2, Gavel, ArrowRight } from 'lucide-react'
 import { motion } from 'framer-motion'
+import BookingButton from '../components/ui/BookingButton'
 
 const iconMap = { Heart, Scale, Handshake, Briefcase, TrendingUp, Shield, Building2, Gavel }
 
@@ -322,9 +323,9 @@ export default function Areas() {
                 Cuéntenos sobre su caso y nuestro equipo le dará la asesoría que necesita
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href={`tel:${contact.phoneRaw}`} className="btn-primary inline-block">
+                <BookingButton className="btn-primary inline-block">
                   Agendar Consulta Gratuita
-                </a>
+                </BookingButton>
               </div>
             </div>
           </ScrollReveal>
