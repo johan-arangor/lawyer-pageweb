@@ -4,11 +4,14 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Heart, Scale, Handshake, Briefcase, TrendingUp, Shield, Building2, Gavel, MapPin, Phone, MessageCircle, Smartphone, Bell, BarChart3, Search, Target, Zap, Check } from 'lucide-react'
 import ScrollReveal from '../components/ui/ScrollReveal'
 import { contact, services, stats, testimonials, team, workflow, heroContent, benefits } from '../data/content'
+import { useAuth } from '../context/AuthContext'
+import BookingButton from '../components/ui/BookingButton'
 
 // Icons mapping
 const iconMap = { Heart, Scale, Handshake, Briefcase, TrendingUp, Shield, Building2, Gavel, Search, Target, Zap, Check }
 
 export default function Home() {
+  const { user, openAuth } = useAuth()
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
@@ -302,10 +305,13 @@ export default function Home() {
                   ))}
                 </div>
 
-                <Link to="/portal" className="btn-primary inline-flex items-center gap-2">
+                <BookingButton 
+                  to="/mi-espacio"
+                  className="btn-primary inline-flex items-center gap-2"
+                >
                   Solicitar Acceso al Portal
                   <ArrowRight size={16} />
-                </Link>
+                </BookingButton>
               </div>
             </ScrollReveal>
 
