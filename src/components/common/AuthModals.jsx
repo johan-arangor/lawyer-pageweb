@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, Phone, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-const API_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.DEV
+  ? import.meta.env.VITE_API_URL
+  : (window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL);
 
 const countryCodes = [
   { code: '+57', flag: '🇨🇴', name: 'Colombia' },
@@ -19,7 +21,8 @@ const countryCodes = [
 ];
 
 export default function AuthModals({ isOpen, onClose, initialMode = 'login' }) {
-  const [mode, setMode] = useState(initialMode); // 'login', 'register', 'success'
+  const [mode, setMode] = useState(initialMode); // 'login', 'register', 'success', 'forgot'
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -34,6 +37,28 @@ export default function AuthModals({ isOpen, onClose, initialMode = 'login' }) {
 
   if (!isOpen) return null;
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch(`${API_URL}/auth/request-password-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, source: 'web' })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al enviar el correo');
+
+      setSuccessMsg('Si el correo está registrado, recibirás un enlace de recuperación pronto.');
+      setMode('success');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -41,10 +66,11 @@ export default function AuthModals({ isOpen, onClose, initialMode = 'login' }) {
 
     try {
       const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
-      const res = await fetch(`${API_URL}${endpoint}`, {
+      const fullUrl = `${API_URL}${endpoint}`;
+      const res = await fetch(fullUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, source: 'web' })
       });
 
       let data;
@@ -87,12 +113,46 @@ export default function AuthModals({ isOpen, onClose, initialMode = 'login' }) {
             <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-10 h-10" />
             </div>
-            <h2 className="text-3xl font-serif font-bold text-primary mb-4">¡Registro Exitoso!</h2>
+            <h2 className="text-3xl font-serif font-bold text-primary mb-4">
+              {successMsg ? 'Solicitud Enviada' : '¡Registro Exitoso!'}
+            </h2>
             <p className="text-slate-600 mb-8">
-              Hemos enviado un correo a <b>{formData.email}</b>. Por favor, confirma tu cuenta para poder agendar tu cita.
+              {successMsg || (
+                <>Hemos enviado un correo a <b>{formData.email}</b>. Por favor, confirma tu cuenta para poder agendar tu cita.</>
+              )}
             </p>
             <button onClick={onClose} className="btn-primary w-full">Entendido</button>
           </div>
+        ) : mode === 'forgot' ? (
+          <>
+            <h2 className="text-3xl font-serif font-bold text-primary mb-2">Recuperar Contraseña</h2>
+            <p className="text-slate-500 mb-8">Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  required
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+              {error && <p className="text-red-500 text-sm font-bold flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {error}</p>}
+              <button type="submit" disabled={loading} className="btn-primary w-full py-4 mt-4">
+                {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : 'Enviar Enlace'}
+              </button>
+            </form>
+
+            <button
+              onClick={() => { setMode('login'); setError(''); }}
+              className="w-full text-center mt-6 text-accent font-bold hover:underline"
+            >
+              Volver al inicio de sesión
+            </button>
+          </>
         ) : (
           <>
             <h2 className="text-3xl font-serif font-bold text-primary mb-2">
@@ -155,7 +215,7 @@ export default function AuthModals({ isOpen, onClose, initialMode = 'login' }) {
                   className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
-              {mode === 'login' && (
+              <div className="space-y-2">
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                   <input
@@ -167,7 +227,16 @@ export default function AuthModals({ isOpen, onClose, initialMode = 'login' }) {
                     className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
-              )}
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => { setMode('forgot'); setError(''); }}
+                    className="text-sm text-accent hover:underline font-medium"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
+              </div>
 
               {error && <p className="text-red-500 text-sm font-bold flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {error}</p>}
 

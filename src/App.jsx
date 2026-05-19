@@ -17,6 +17,7 @@ import Contacto from './pages/Contacto'
 import AgendarCita from './pages/AgendarCita'
 import MiEspacio from './pages/MiEspacio'
 import ConfirmarCuenta from './pages/ConfirmarCuenta'
+import ResetPassword from './pages/ResetPassword'
 
 function AppContent() {
   const { isAuthOpen, closeAuth, authMode } = useAuth()
@@ -37,6 +38,7 @@ function AppContent() {
             <Route path="/agendar" element={<AgendarCita />} />
             <Route path="/mi-espacio" element={<MiEspacio />} />
             <Route path="/confirmar-cuenta" element={<ConfirmarCuenta />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
         </main>
         <Footer />
