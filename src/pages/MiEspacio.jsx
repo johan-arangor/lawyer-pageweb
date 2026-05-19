@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import ScrollReveal from '../components/ui/ScrollReveal';
-import { User, Calendar, Shield, MapPin, Phone, Mail, ChevronRight, Lock, Clock } from 'lucide-react';
+import { User, Calendar, Shield, MapPin, Phone, Mail, ChevronRight, Lock, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
-const API_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.DEV 
+  ? import.meta.env.VITE_API_URL 
+  : (window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL);
 
 export default function MiEspacio() {
   const { user, token, logout } = useAuth();
@@ -15,6 +16,8 @@ export default function MiEspacio() {
   const [selectedCase, setSelectedCase] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState('');
   const notesPerPage = 5;
 
   useEffect(() => {
@@ -23,6 +26,24 @@ export default function MiEspacio() {
       fetchCases();
     }
   }, [user, token]);
+
+  const handleChangePassword = async () => {
+    setPasswordLoading(true);
+    setPasswordStatus('');
+    try {
+      const res = await fetch(`${API_URL}/auth/request-password-reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, source: 'web' })
+      });
+      if (!res.ok) throw new Error('Error al enviar el correo');
+      setPasswordStatus('success');
+    } catch (err) {
+      setPasswordStatus('error');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -119,7 +140,12 @@ export default function MiEspacio() {
             <main className="flex-1">
               <div className="bg-white rounded-[2.5rem] shadow-xl p-10 min-h-[600px]">
                 {activeTab === 'profile' && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                  <motion.div 
+                    key="profile-tab"
+                    initial={{ opacity: 0, y: 10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    className="space-y-8"
+                  >
                     <h3 className="text-3xl font-serif font-bold text-primary">Información Personal</h3>
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-1">
@@ -138,6 +164,51 @@ export default function MiEspacio() {
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dirección</label>
                         <p className="font-bold text-primary flex items-center gap-2"><MapPin className="w-4 h-4 text-accent" /> {user.address || 'No registrada'}</p>
                       </div>
+                    </div>
+
+                    {/* Sección de Seguridad */}
+                    <div className="mt-12 pt-8 border-t border-slate-100">
+                      <div className="flex items-center gap-4 mb-6">
+                        <div className="w-12 h-12 bg-primary/5 text-primary rounded-2xl flex items-center justify-center">
+                          <Shield className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-xl font-serif font-bold text-primary">Seguridad de la Cuenta</h3>
+                      </div>
+                      
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                        <div className="space-y-1">
+                          <p className="font-bold text-primary">Contraseña del Sistema</p>
+                          <p className="text-sm text-slate-500 max-w-md">Para cambiar tu contraseña te enviaremos un enlace de acceso seguro a tu correo electrónico registrado.</p>
+                        </div>
+                        
+                        <div className="shrink-0">
+                          {passwordStatus === 'success' ? (
+                            <div className="flex flex-col items-center gap-2">
+                              <div className="flex items-center gap-2 px-6 py-3 bg-emerald-100 text-emerald-600 rounded-xl font-bold">
+                                <CheckCircle className="w-5 h-5" /> ¡Correo Enviado!
+                              </div>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Revisa tu correo</p>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={handleChangePassword}
+                              disabled={passwordLoading}
+                              className="group px-8 py-3 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center gap-3"
+                            >
+                              {passwordLoading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              ) : (
+                                <><Lock className="w-4 h-4" /> Cambiar Contraseña</>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      {passwordStatus === 'error' && (
+                        <p className="text-red-500 text-xs mt-3 flex items-center gap-2 font-bold px-2">
+                          <AlertCircle className="w-4 h-4" /> Error al enviar el correo. Reintenta más tarde.
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 )}

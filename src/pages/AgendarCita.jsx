@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, User, Briefcase, Phone, Mail, Check, AlertCircle, Clock, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
-const API_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.DEV 
+  ? import.meta.env.VITE_API_URL 
+  : (window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL);
 
 export default function AgendarCita() {
   const { user } = useAuth()

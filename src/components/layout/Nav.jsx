@@ -156,7 +156,7 @@ export default function Nav() {
                 </Link>
               ) : (
                 <button onClick={() => { openAuth('login'); setIsOpen(false); }} className="btn-secondary text-center">
-                  Iniciar Sesión
+                  {heroContent.portalText}
                 </button>
               )}
             </div>

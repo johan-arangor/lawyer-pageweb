@@ -3,7 +3,9 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
-const API_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.DEV 
+  ? import.meta.env.VITE_API_URL 
+  : (window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL);
 
 export default function ConfirmarCuenta() {
   const [searchParams] = useSearchParams();
@@ -46,7 +48,7 @@ export default function ConfirmarCuenta() {
       const res = await fetch(`${API_URL}/auth/confirm-account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password })
+        body: JSON.stringify({ token, password, source: 'web' })
       });
       const data = await res.json();
 
